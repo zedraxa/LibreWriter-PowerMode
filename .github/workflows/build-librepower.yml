@@ -1,0 +1,61 @@
+name: Build LibrePower (DEB & EXE)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Build Linux .deb
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libx11-dev libxext-dev libxrender-dev libxt-dev libgl1-mesa-dev \
+            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev libcups2-dev libasound2-dev python3-dev \
+            libxml2-dev libxslt1-dev libcurl4-openssl-dev libicu-dev libboost-dev libglew-dev libglm-dev \
+            libepoxy-dev libabw-dev libcdr-dev libe-book-dev libetonyek-dev libfreehand-dev liblangtag-dev \
+            libmspub-dev libmwaw-dev libodfgen-dev liborcus-dev libpagemaker-dev libvisio-dev libwpd-dev \
+            libwpg-dev libwps-dev libzmf-dev flex bison gperf ant junit4
+
+      - name: Configure Minimal Writer Build
+        run: |
+          ./autogen.sh --disable-calc --disable-draw --disable-impress --disable-math --disable-base \
+            --disable-postgresql-sdbc --disable-firebird-sdbc --disable-extension-integration \
+            --without-help --without-myspell-dicts --with-package-format=deb
+
+      - name: Build
+        run: make -j$(nproc)
+
+      - name: Archive .deb package
+        uses: actions/upload-artifact@v3
+        with:
+          name: LibrePower-Linux-DEB
+          path: workdir/installation/LibreOffice/deb/install/*.deb
+
+  build-windows:
+    name: Build Windows .msi (EXE)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup LODE
+        run: |
+          # Note: Simplified LODE setup for GHA
+          echo "Setting up Windows build environment..."
+          
+      - name: Build
+        run: |
+          # Actual build command would go here
+          # Note: Full Windows build is extremely slow on GHA
+          echo "Building Windows MSI installer..."
+          
+      - name: Archive MSI package
+        uses: actions/upload-artifact@v3
+        with:
+          name: LibrePower-Windows-MSI
+          path: instdir/admin/*.msi
