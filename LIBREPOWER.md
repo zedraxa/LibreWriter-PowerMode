@@ -7,8 +7,12 @@ LibrePower is a high-performance fork of LibreOffice Writer designed to maximize
 ## 🚀 Features
 
 - **Fire Mode Engine**: Real-time flame animations that respond to your typing speed.
-- **Combo System**: Build streaks and watch the debris fly!
-- **Global Screen Shake**: Feel the impact of every keystroke.
+- **Total Chaos System**: 
+  - **Debris**: Page breaking particles fall as you type.
+  - **Embers**: Rising sparks for added heat.
+  - **Global Screen Shake**: Every stroke impacts the whole viewport.
+- **Combo System**: Build streaks to unlock more intense effects.
+- **Smart Placement**: Combo text carefully positioned to stay out of your way.
 - **Toggle Control**: Enable or disable the chaos with a single button in the Standard toolbar.
 
 ## 📦 Installation
