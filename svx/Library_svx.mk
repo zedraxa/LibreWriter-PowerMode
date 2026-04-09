@@ -53,8 +53,7 @@ $(eval $(call gb_Library_use_libraries,svx,\
     cppu \
     $(call gb_Helper_optional,BREAKPAD, \
 		crashreport) \
-    $(call gb_Helper_optional,DBCONNECTIVITY, \
-        dbtools) \
+    dbtools \
     docmodel \
     drawinglayercore \
     drawinglayer \
@@ -190,7 +189,7 @@ $(eval $(call gb_Library_add_exception_objects,svx,\
     svx/source/fmcomp/dbaobjectex \
     svx/source/form/databaselocationinput \
     svx/source/form/dbcharsethelper \
-    $(call gb_Helper_optional,DBCONNECTIVITY,svx/source/form/filtnav) \
+    svx/source/form/filtnav \
     svx/source/form/fmobjfac \
     svx/source/form/fmPropBrw \
     svx/source/form/fmsrccfg \
