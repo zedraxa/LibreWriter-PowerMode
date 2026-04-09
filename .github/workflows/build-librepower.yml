@@ -48,11 +48,6 @@ jobs:
       - name: Configure Minimal Writer Build
         run: |
           ./autogen.sh \
-            --disable-calc \
-            --disable-draw \
-            --disable-impress \
-            --disable-math \
-            --disable-base \
             --disable-report-builder \
             --disable-postgresql-sdbc \
             --disable-firebird-sdbc \
@@ -70,6 +65,11 @@ jobs:
             --enable-epm \
             --with-package-format=deb \
             --enable-ccache
+        continue-on-error: false
+
+      - name: Show config.log on failure
+        if: failure()
+        run: cat config.log || echo "No config.log found"
 
       - name: Build Writer and Dependencies
         run: make -j$(nproc) sw
