@@ -1,4 +1,4 @@
-name: LibrePower CI
+name: Build LibrePower (Writer Only)
 
 on:
   push:
@@ -8,52 +8,24 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
 
 jobs:
-  validate:
-    name: Validate PowerMode Patch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Verify PowerMode Files
-        run: |
-          echo "🔥 LibrePower - Total Chaos Mode"
-          echo "================================="
-          FILES=(
-            "sw/source/uibase/docvw/flameengine.cxx"
-            "sw/source/uibase/inc/flameengine.hxx"
-            "sw/source/uibase/inc/powermode.hxx"
-            "sw/source/uibase/docvw/edtwin2.cxx"
-            "sw/source/uibase/uiview/view0.cxx"
-            "sw/inc/cmdid.h"
-            "sw/Library_sw.mk"
-            "sw/sdi/swriter.sdi"
-          )
-          ALL_OK=true
-          for f in "${FILES[@]}"; do
-            if [ -f "$f" ]; then
-              echo "  ✅ $f"
-            else
-              echo "  ❌ MISSING: $f"
-              ALL_OK=false
-            fi
-          done
-          if $ALL_OK; then
-            echo "All PowerMode files present! 🔥"
-          else
-            echo "Some files are missing!"
-            exit 1
-          fi
-
   build-linux:
     name: Build Linux .deb
     runs-on: ubuntu-22.04
-    needs: [validate]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ALL build dependencies
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/*.cxx', '**/*.hxx', '**/Library_*.mk') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -73,7 +45,7 @@ jobs:
             flex bison gperf ant junit4 nasm zip unzip \
             ccache dpkg-dev fakeroot
 
-      - name: Configure Writer-Only Build
+      - name: Configure Minimal Writer Build
         run: |
           ./autogen.sh \
             --disable-calc \
@@ -87,16 +59,20 @@ jobs:
             --disable-extension-integration \
             --disable-odk \
             --disable-online-update \
+            --disable-gstreamer-1-0 \
+            --disable-database-connectivity \
+            --disable-extensions \
+            --disable-avmedia \
             --without-help \
             --without-myspell-dicts \
             --without-java \
             --without-doxygen \
-            --disable-gstreamer-1-0 \
+            --enable-epm \
             --with-package-format=deb \
             --enable-ccache
 
-      - name: Build Writer
-        run: make -j$(nproc) build-nocheck
+      - name: Build Writer and Dependencies
+        run: make -j$(nproc) sw
 
       - name: Create .deb package
         run: |
@@ -109,101 +85,25 @@ jobs:
           name: LibrePower-Linux-DEB
           path: workdir/installation/**/*.deb
 
-  build-windows:
-    name: Build Windows Portable
-    runs-on: windows-2022
-    needs: [validate]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Cygwin and Build Tools
-        uses: cygwin/cygwin-install-action@v4
-        with:
-          packages: >-
-            autoconf automake libtool pkg-config make gcc-g++
-            perl python3 bison flex gperf zip unzip
-            libxml2-devel libxslt-devel
-
-      - name: Install Additional Tools
-        run: |
-          choco install -y nasm
-          pip install lxml
-
-      - name: Configure Writer-Only Build
-        shell: C:\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
-        env:
-          CHERE_INVOKING: 1
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          ./autogen.sh \
-            --disable-calc \
-            --disable-draw \
-            --disable-impress \
-            --disable-math \
-            --disable-base \
-            --disable-postgresql-sdbc \
-            --disable-firebird-sdbc \
-            --disable-extension-integration \
-            --disable-odk \
-            --disable-online-update \
-            --disable-gstreamer-1-0 \
-            --without-help \
-            --without-myspell-dicts \
-            --without-java \
-            --without-doxygen \
-            --with-package-format=msi \
-            --enable-ccache
-
-      - name: Build Writer
-        shell: C:\cygwin\bin\bash.exe --login -eo pipefail -o igncr '{0}'
-        env:
-          CHERE_INVOKING: 1
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          make -j$(nproc) build-nocheck
-
-      - name: Archive Windows Package
-        uses: actions/upload-artifact@v4
-        with:
-          name: LibrePower-Windows
-          path: |
-            workdir/installation/**/*.msi
-            workdir/installation/**/*.exe
-
   create-release:
     name: Create GitHub Release
-    needs: [build-linux, build-windows]
+    needs: [build-linux]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
-      - name: Download All Artifacts
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
-
-      - name: List artifacts
-        run: find . -type f -name "*.deb" -o -name "*.msi" -o -name "*.exe" | head -20
-
+        
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             LibrePower-Linux-DEB/**/*.deb
-            LibrePower-Windows/**/*.msi
-            LibrePower-Windows/**/*.exe
           body: |
             ## 🔥 LibrePower (Writer Fire Mode) - Total Chaos Edition
-
-            ### Features
-            - **Fire Engine**: Cinematic flame animations reacting to typing speed
-            - **Debris & Destruction**: Particles with realistic gravity physics
-            - **Ember System**: Rising sparks during high-speed streaks
-            - **Global Screen Shake**: Viewport vibration scaling with combo
-            - **Pulsing Combo System**: Reactive word combo display
-            - **One-Touch Toggle**: Fire Mode button in the Writer toolbar
-
-            ### Installation
-            **Linux:** Download the `.deb` and install with `sudo dpkg -i librepower-*.deb`
-            **Windows:** Download and run the `.msi` installer
-
-            Let the flames guide your pen! 🔥🦾
+            
+            This is a daily build of LibrePower Writer. Install the .deb and enjoy the chaos!
+            
+            Install: `sudo dpkg -i librepower-*.deb`
