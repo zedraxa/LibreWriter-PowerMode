@@ -84,9 +84,7 @@ jobs:
 
       - name: Build Writer and Dependencies
         run: |
-          make -j$(nproc) build-deps
-          make -j$(nproc) oox
-          make -j$(nproc) sw
+          make -j$(nproc) build
 
       - name: Create .deb package
         run: |
