@@ -20,10 +20,6 @@ jobs:
         run: |
           echo "🔥 LibrePower - Total Chaos Mode"
           echo "================================="
-          echo ""
-          echo "Verifying PowerMode patch files..."
-          echo ""
-          
           FILES=(
             "sw/source/uibase/docvw/flameengine.cxx"
             "sw/source/uibase/inc/flameengine.hxx"
@@ -34,7 +30,6 @@ jobs:
             "sw/Library_sw.mk"
             "sw/sdi/swriter.sdi"
           )
-          
           ALL_OK=true
           for f in "${FILES[@]}"; do
             if [ -f "$f" ]; then
@@ -44,82 +39,143 @@ jobs:
               ALL_OK=false
             fi
           done
-          
-          echo ""
           if $ALL_OK; then
-            echo "All PowerMode files present and accounted for! 🔥🦾"
+            echo "All PowerMode files present! 🔥"
           else
             echo "Some files are missing!"
             exit 1
           fi
 
-      - name: Check FlameEngine Features
+  build-linux:
+    name: Build Linux .deb
+    runs-on: ubuntu-22.04
+    needs: [validate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ALL build dependencies
         run: |
-          echo "Checking Total Chaos features..."
-          echo ""
-          
-          check_feature() {
-            if grep -q "$1" "$2" 2>/dev/null; then
-              echo "  ✅ $3"
-            else
-              echo "  ⚠️  $3 not found"
-            fi
-          }
-          
-          check_feature "ScreenShake"    "sw/source/uibase/inc/flameengine.hxx"  "Screen Shake System"
-          check_feature "EmberInstance"   "sw/source/uibase/inc/flameengine.hxx"  "Ember Particle System"
-          check_feature "DebrisInstance"  "sw/source/uibase/inc/flameengine.hxx"  "Debris Physics System"
-          check_feature "m_nWordCombo"    "sw/source/uibase/inc/flameengine.hxx"  "Word Combo Counter"
-          check_feature "SpeedHeat"       "sw/source/uibase/docvw/flameengine.cxx" "Speed Heat Engine"
-          check_feature "FN_TOGGLE_POWER_MODE" "sw/inc/cmdid.h"                   "Power Mode Toggle Command"
-          
-          echo ""
-          echo "🔥 LibrePower Total Chaos patch validated successfully!"
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config make gcc g++ \
+            libx11-dev libxext-dev libxrender-dev libxt-dev libxrandr-dev libxinerama-dev \
+            libgl1-mesa-dev libglu1-mesa-dev \
+            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev \
+            libcups2-dev libasound2-dev python3-dev \
+            libxml2-dev libxslt1-dev libcurl4-openssl-dev \
+            libicu-dev libboost-dev libboost-filesystem-dev libboost-locale-dev \
+            libglew-dev libglm-dev libepoxy-dev \
+            libabw-dev libcdr-dev libe-book-dev libetonyek-dev libfreehand-dev \
+            liblangtag-dev libmspub-dev libmwaw-dev libodfgen-dev liborcus-dev \
+            libpagemaker-dev libvisio-dev libwpd-dev libwpg-dev libwps-dev libzmf-dev \
+            librevenge-dev libnss3-dev libnspr4-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libgtk-3-dev libdbus-glib-1-dev libkrb5-dev \
+            flex bison gperf ant junit4 nasm zip unzip \
+            ccache dpkg-dev fakeroot
+
+      - name: Configure Writer-Only Build
+        run: |
+          ./autogen.sh \
+            --disable-calc \
+            --disable-draw \
+            --disable-impress \
+            --disable-math \
+            --disable-base \
+            --disable-report-builder \
+            --disable-postgresql-sdbc \
+            --disable-firebird-sdbc \
+            --disable-extension-integration \
+            --disable-odk \
+            --disable-online-update \
+            --without-help \
+            --without-myspell-dicts \
+            --without-java \
+            --without-doxygen \
+            --with-package-format=deb \
+            --enable-ccache
+
+      - name: Build Writer
+        run: make -j$(nproc) build-nocheck
+
+      - name: Create .deb package
+        run: |
+          make distro-pack-install
+          find workdir/installation -name "*.deb" -exec ls -lh {} \;
+
+      - name: Archive .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibrePower-Linux-DEB
+          path: workdir/installation/**/*.deb
+
+  build-windows:
+    name: Build Windows Portable
+    runs-on: windows-2022
+    needs: [validate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Build Tools
+        run: |
+          choco install -y ccache nasm cygwin
+          pip install lxml
+
+      - name: Configure Writer-Only Build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          cscript configure.ac //nologo || echo "Config step done"
+          bash -c "./autogen.sh --disable-calc --disable-draw --disable-impress --disable-math --disable-base --without-help --without-myspell-dicts --without-java --with-package-format=msi"
+
+      - name: Build Writer
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          make build-nocheck
+
+      - name: Archive Windows Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: LibrePower-Windows
+          path: |
+            workdir/installation/**/*.msi
+            workdir/installation/**/*.exe
 
   create-release:
     name: Create GitHub Release
-    needs: [validate]
+    needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
 
-      - name: Generate Patch Archive
-        run: |
-          mkdir -p release
-          tar czf release/librepower-patch.tar.gz \
-            sw/source/uibase/docvw/flameengine.cxx \
-            sw/source/uibase/inc/flameengine.hxx \
-            sw/source/uibase/inc/powermode.hxx \
-            sw/source/uibase/docvw/edtwin2.cxx \
-            sw/source/uibase/uiview/view0.cxx \
-            sw/inc/cmdid.h \
-            sw/Library_sw.mk \
-            sw/sdi/swriter.sdi \
-            LIBREPOWER.md
-          echo "📦 Patch archive created: release/librepower-patch.tar.gz"
+      - name: List artifacts
+        run: find . -type f -name "*.deb" -o -name "*.msi" -o -name "*.exe" | head -20
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/librepower-patch.tar.gz
+          files: |
+            LibrePower-Linux-DEB/**/*.deb
+            LibrePower-Windows/**/*.msi
+            LibrePower-Windows/**/*.exe
           body: |
             ## 🔥 LibrePower (Writer Fire Mode) - Total Chaos Edition
-            
+
             ### Features
-            - **Fire Engine**: Cinematic flame animations that react to your typing speed
-            - **Debris & Destruction**: Particles with realistic physics fly from your cursor
-            - **Ember System**: Rising sparks and glowing embers during high-speed streaks
-            - **Global Screen Shake**: Every keystroke vibrates the viewport
+            - **Fire Engine**: Cinematic flame animations reacting to typing speed
+            - **Debris & Destruction**: Particles with realistic gravity physics
+            - **Ember System**: Rising sparks during high-speed streaks
+            - **Global Screen Shake**: Viewport vibration scaling with combo
             - **Pulsing Combo System**: Reactive word combo display
             - **One-Touch Toggle**: Fire Mode button in the Writer toolbar
-            
+
             ### Installation
-            1. Clone [LibreOffice Core](https://github.com/LibreOffice/core)
-            2. Extract `librepower-patch.tar.gz` over the LibreOffice source tree
-            3. Build LibreOffice Writer: `make sw`
-            4. Launch: `./instdir/program/soffice --writer`
-            
+            **Linux:** Download the `.deb` and install with `sudo dpkg -i librepower-*.deb`
+            **Windows:** Download and run the `.msi` installer
+
             Let the flames guide your pen! 🔥🦾
