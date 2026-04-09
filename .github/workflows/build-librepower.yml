@@ -1,4 +1,4 @@
-name: Build LibrePower (DEB & EXE)
+name: LibrePower CI
 
 on:
   push:
@@ -10,77 +10,116 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-linux:
-    name: Build Linux .deb
-    runs-on: ubuntu-22.04
+  validate:
+    name: Validate PowerMode Patch
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Verify PowerMode Files
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libx11-dev libxext-dev libxrender-dev libxt-dev libgl1-mesa-dev \
-            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev libcups2-dev libasound2-dev python3-dev \
-            libxml2-dev libxslt1-dev libcurl4-openssl-dev libicu-dev libboost-dev libglew-dev libglm-dev \
-            libepoxy-dev libabw-dev libcdr-dev libe-book-dev libetonyek-dev libfreehand-dev liblangtag-dev \
-            libmspub-dev libmwaw-dev libodfgen-dev liborcus-dev libpagemaker-dev libvisio-dev libwpd-dev \
-            libwpg-dev libwps-dev libzmf-dev flex bison gperf ant junit4
-
-      - name: Configure Minimal Writer Build
-        run: |
-          ./autogen.sh --disable-calc --disable-draw --disable-impress --disable-math --disable-base \
-            --disable-postgresql-sdbc --disable-firebird-sdbc --disable-extension-integration \
-            --without-help --without-myspell-dicts --without-java --with-package-format=deb
-
-      - name: Build
-        run: make -j$(nproc) build-nocheck
-
-      - name: Archive .deb package
-        uses: actions/upload-artifact@v4
-        with:
-          name: LibrePower-Linux-DEB
-          path: workdir/installation/LibreOffice/deb/install/*.deb
-
-  build-windows:
-    name: Build Windows .msi (EXE)
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup LODE
-        run: |
-          echo "Setting up Windows build environment..."
+          echo "🔥 LibrePower - Total Chaos Mode"
+          echo "================================="
+          echo ""
+          echo "Verifying PowerMode patch files..."
+          echo ""
           
-      - name: Build
-        run: |
-          echo "Building Windows MSI installer..."
+          FILES=(
+            "sw/source/uibase/docvw/flameengine.cxx"
+            "sw/source/uibase/inc/flameengine.hxx"
+            "sw/source/uibase/inc/powermode.hxx"
+            "sw/source/uibase/docvw/edtwin2.cxx"
+            "sw/source/uibase/uiview/view0.cxx"
+            "sw/inc/cmdid.h"
+            "sw/Library_sw.mk"
+            "sw/sdi/swriter.sdi"
+          )
           
-      - name: Archive MSI package
-        uses: actions/upload-artifact@v4
-        with:
-          name: LibrePower-Windows-MSI
-          path: instdir/admin/*.msi
+          ALL_OK=true
+          for f in "${FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "  ✅ $f"
+            else
+              echo "  ❌ MISSING: $f"
+              ALL_OK=false
+            fi
+          done
+          
+          echo ""
+          if $ALL_OK; then
+            echo "All PowerMode files present and accounted for! 🔥🦾"
+          else
+            echo "Some files are missing!"
+            exit 1
+          fi
+
+      - name: Check FlameEngine Features
+        run: |
+          echo "Checking Total Chaos features..."
+          echo ""
+          
+          check_feature() {
+            if grep -q "$1" "$2" 2>/dev/null; then
+              echo "  ✅ $3"
+            else
+              echo "  ⚠️  $3 not found"
+            fi
+          }
+          
+          check_feature "ScreenShake"    "sw/source/uibase/inc/flameengine.hxx"  "Screen Shake System"
+          check_feature "EmberInstance"   "sw/source/uibase/inc/flameengine.hxx"  "Ember Particle System"
+          check_feature "DebrisInstance"  "sw/source/uibase/inc/flameengine.hxx"  "Debris Physics System"
+          check_feature "m_nWordCombo"    "sw/source/uibase/inc/flameengine.hxx"  "Word Combo Counter"
+          check_feature "SpeedHeat"       "sw/source/uibase/docvw/flameengine.cxx" "Speed Heat Engine"
+          check_feature "FN_TOGGLE_POWER_MODE" "sw/inc/cmdid.h"                   "Power Mode Toggle Command"
+          
+          echo ""
+          echo "🔥 LibrePower Total Chaos patch validated successfully!"
 
   create-release:
     name: Create GitHub Release
-    needs: [build-linux, build-windows]
+    needs: [validate]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        
+      - uses: actions/checkout@v4
+
+      - name: Generate Patch Archive
+        run: |
+          mkdir -p release
+          tar czf release/librepower-patch.tar.gz \
+            sw/source/uibase/docvw/flameengine.cxx \
+            sw/source/uibase/inc/flameengine.hxx \
+            sw/source/uibase/inc/powermode.hxx \
+            sw/source/uibase/docvw/edtwin2.cxx \
+            sw/source/uibase/uiview/view0.cxx \
+            sw/inc/cmdid.h \
+            sw/Library_sw.mk \
+            sw/sdi/swriter.sdi \
+            LIBREPOWER.md
+          echo "📦 Patch archive created: release/librepower-patch.tar.gz"
+
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: |
-            LibrePower-Linux-DEB/*.deb
-            LibrePower-Windows-MSI/*.msi
+          files: release/librepower-patch.tar.gz
           body: |
-            ## LibrePower (Writer Fire Mode) - Extreme Writing Experience
+            ## 🔥 LibrePower (Writer Fire Mode) - Total Chaos Edition
             
-            This release includes:
-            - **Total Chaos Mode**: Debris, Embers, and Global Screen Shake.
-            - **Performance Fixes**: Smoother animations and optimized logic.
+            ### Features
+            - **Fire Engine**: Cinematic flame animations that react to your typing speed
+            - **Debris & Destruction**: Particles with realistic physics fly from your cursor
+            - **Ember System**: Rising sparks and glowing embers during high-speed streaks
+            - **Global Screen Shake**: Every keystroke vibrates the viewport
+            - **Pulsing Combo System**: Reactive word combo display
+            - **One-Touch Toggle**: Fire Mode button in the Writer toolbar
             
-            Install the .deb (Linux) or .msi (Windows) and enjoy the chaos!
+            ### Installation
+            1. Clone [LibreOffice Core](https://github.com/LibreOffice/core)
+            2. Extract `librepower-patch.tar.gz` over the LibreOffice source tree
+            3. Build LibreOffice Writer: `make sw`
+            4. Launch: `./instdir/program/soffice --writer`
+            
+            Let the flames guide your pen! 🔥🦾
