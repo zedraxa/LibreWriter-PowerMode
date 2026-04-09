@@ -13,7 +13,7 @@ env:
 jobs:
   build-linux:
     name: Build Linux .deb
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            autoconf automake libtool pkg-config make gcc g++ \
+            autoconf automake libtool pkg-config make gcc-13 g++-13 \
             libx11-dev libxext-dev libxrender-dev libxt-dev libxrandr-dev libxinerama-dev \
             libgl1-mesa-dev libglu1-mesa-dev \
             libfontconfig1-dev libfreetype6-dev libharfbuzz-dev \
@@ -47,6 +47,9 @@ jobs:
             ccache dpkg-dev fakeroot
 
       - name: Configure Minimal Writer Build
+        env:
+          CC: gcc-13
+          CXX: g++-13
         run: |
           ./autogen.sh \
             --disable-report-builder \
