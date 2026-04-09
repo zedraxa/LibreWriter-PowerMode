@@ -2,102 +2,108 @@
   <img src="branding/banner.jpg" alt="LibrePower Banner" width="800">
 </p>
 
-# LibreOffice
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/211/badge.svg)](https://scan.coverity.com/projects/211) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/307/badge)](https://bestpractices.coreinfrastructure.org/projects/307) [![Translation status](https://weblate.documentfoundation.org/widgets/libo_ui-master/-/svg-badge.svg)](https://weblate.documentfoundation.org/engage/libo_ui-master/?utm_source=widget)
+<h1 align="center">🔥 LibrePower: Total Chaos Edition</h1>
 
-LibreOffice is an integrated office suite based on copyleft licenses and compatible with most document formats and standards. Libreoffice is backed by The Document Foundation, which represents a large independent community of enterprises, developers and other volunteers moved by the common goal of bringing to the market the best software for personal productivity. LibreOffice is open source, and free to download, use and distribute.
+<p align="center">
+  <b>Turn LibreOffice Writer into an action arena. Feel the heat of every keystroke.</b>
+</p>
 
-A quick overview of the LibreOffice code structure.
+<p align="center">
+  <a href="https://github.com/zedraxa/LibreWriter-PowerMode/actions"><img src="https://github.com/zedraxa/LibreWriter-PowerMode/actions/workflows/build-librepower.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://github.com/zedraxa/LibreWriter-PowerMode/releases"><img src="https://img.shields.io/github/v/release/zedraxa/LibreWriter-PowerMode?style=flat-square&color=orange" alt="Latest Release"></a>
+  <a href="https://github.com/zedraxa/LibreWriter-PowerMode/blob/main/COPYING.MPL"><img src="https://img.shields.io/badge/license-MPL--2.0-blue?style=flat-square" alt="License"></a>
+</p>
 
-## Overview
-You can develop for LibreOffice in one of two ways, one recommended and one much less so. First the somewhat less recommended way: it is possible to use the SDK to develop an extension, for which you can read the API docs and Developers Guide. This re-uses the (extremely generic) UNO APIs that are also used by macro scripting in StarBasic.
+---
 
-The best way to add a generally useful feature to LibreOffice is to work on the code base however. Overall this way makes it easier to compile and build your code, it avoids any arbitrary limitations of our scripting APIs, and in general is far more simple and intuitive - if you are a reasonably able C++ programmer.
+**LibrePower** is a high-performance visual engine patched into [LibreOffice Writer](https://www.libreoffice.org/). It transforms the act of typing into an immersive, gamified experience — designed to maximize motivation through cinematic feedback.
 
-## The Build Chain and Runtime Baselines
-These are the current minimal operating system and compiler versions to run and compile LibreOffice, also used by the TDF builds:
+This is **not** a plugin or extension. It is a direct C++ modification of the LibreOffice Writer source code.
 
-**Windows:**
-- Runtime: Windows 10
-- Build: wsl-as-helper + Visual Studio 2022
+---
 
-**macOS:**
-- Runtime: 11
-- Build: 13 or later + Xcode 14.3 or later (using latest version available for a given version of macOS)
+## 🌪️ Total Chaos Features
 
-**Linux:**
-- Runtime: RHEL 9 or CentOS 9 and comparable
-- Build: either GCC 12; or Clang 18 with libstdc++ 11
-
-**iOS (only for LibreOfficeKit):**
-- Runtime: 14.5 (only support for newer i devices == 64 bit)
-- Build: Xcode 12.5 and iPhone SDK 14.5
-
-**Android:**
-- Build: NDK 27 and SDK 30.0.3
-
-**Emscripten / WASM:**
-- Runtime: a browser with SharedMemory support (threads + atomics)
-- Build: Qt 5.15 with Qt supported Emscripten 1.39.8
-See [README.wasm](README.wasm)
-
-Java is required for building many parts of LibreOffice. In TDF Wiki article Development/Java, the exact modules that depend on Java are listed.
-
-The baseline for Java is Java Development Kit (JDK) Version 17 or later.
-
-The baseline for Python is version 3.11. It follows the version available in SUSE Linux Enterprise Desktop and the Maintenance Support version of Red Hat Enterprise Linux.
-
-If you want to use Clang with the LibreOffice compiler plugins, the minimal version of Clang is 18. Since Xcode doesn't provide the compiler plugin headers, you have to compile your own Clang to use them on macOS.
-
-You can find the TDF configure switches in the `distro-configs/` directory.
-
-To setup your initial build environment on Windows and macOS, we provide the LibreOffice Development Environment (LODE) scripts.
-
-For more information see the build instructions for your platform in the TDF wiki.
-
-## The Important Bits of Code
-Each module should have a README.md file inside it which has some degree of documentation for that module; patches are most welcome to improve those. We have those turned into a web page here:
-
-https://docs.libreoffice.org/
-
-However, there are two hundred modules, many of them of only peripheral interest for a specialist audience. So - where is the good stuff, the code that is most useful. Here is a quick overview of the most important ones:
-
-| Module | Description |
+| Feature | Description |
 | :--- | :--- |
-| **sal/** | this provides a simple System Abstraction Layer |
-| **tools/** | this provides basic internal types: Rectangle, Color etc. |
-| **vcl/** | this is the widget toolkit library and one rendering abstraction |
-| **framework/** | UNO framework, responsible for building toolbars, menus, status bars, and the chrome around the document using widgets from VCL, and XML descriptions from /uiconfig/ files |
-| **sfx2/** | legacy core framework used by Writer/Calc/Draw: document model / load/save / signals for actions etc. |
-| **svx/** | drawing model related helper code, including much of Draw/Impress |
+| 🔥 **Fire Engine** | Cinematic flame animations that grow and intensify with your typing speed |
+| 🧱 **Debris System** | Concrete-like particles fly from the cursor with realistic gravity physics |
+| ✨ **Ember Particles** | Rising sparks and glowing embers fill the screen during high-speed streaks |
+| 🫨 **Screen Shake** | Every keystroke vibrates the entire viewport — scales with your combo level |
+| 💓 **Pulsing Combo** | A reactive "WORD COMBO!" display that breathes and shakes with your streak |
+| 🌡️ **Speed Heat** | The faster you type, the brighter and more intense the flames become |
+| 🔘 **One-Touch Toggle** | Fire Mode button in the Writer toolbar — instant on/off |
 
-### Then applications
+---
 
-| Module | Description |
-| :--- | :--- |
-| **desktop/** | this is where the main() for the application lives, init / bootstrap. the name dates back to an ancient StarOffice that also drew a desktop |
-| **sw/** | Writer |
-| **sc/** | Calc |
-| **sd/** | Draw / Impress |
+## 📦 Getting Started
 
-There are several other libraries that are helpful from a graphical perspective:
+### Download the Patch
+Go to the [Releases](https://github.com/zedraxa/LibreWriter-PowerMode/releases) page and download `librepower-patch.tar.gz`.
 
-| Module | Description |
-| :--- | :--- |
-| **basegfx/** | algorithms and data-types for graphics as used in the canvas |
-| **canvas/** | new (UNO) canvas rendering model with various backends |
-| **cppcanvas/** | C++ helper classes for using the UNO canvas |
-| **drawinglayer/** | View code to render drawable objects and break them down into primitives we can render more easily. |
+### Build from Source
 
-## Rules for #include Directives (C/C++)
-Use the `"..."` form if and only if the included file is found next to the including file. Otherwise, use the `<...>` form. (For further details, see the mail Re: C[++]: Normalizing include syntax ("" vs <>).)
+```bash
+# 1. Clone LibreOffice core
+git clone --depth 1 https://github.com/LibreOffice/core.git
+cd core
 
-The UNO API include files should consistently use double quotes, for the benefit of external users of this API.
+# 2. Apply the LibrePower patch (extract over the source tree)
+tar xzf /path/to/librepower-patch.tar.gz
 
-`loplugin:includeform` (`compilerplugins/clang/includeform.cxx`) enforces these rules.
+# 3. Configure & build Writer only
+./autogen.sh --disable-calc --disable-draw --disable-impress
+make sw
 
-## Finding Out More
-Beyond this, you can read the `README.md` files, send us patches, ask on the mailing list `libreoffice@lists.freedesktop.org` (no subscription required) or poke people on IRC `#libreoffice-dev` on `irc.libera.chat` - we're a friendly and generally helpful mob. We know the code can be hard to get into at first, and so there are no silly questions.
+# 4. Launch Writer
+./instdir/program/soffice --writer
+```
 
-## SAST Tools
-PVS-Studio - static analyzer for C, C++, C#, and Java code.
+### Toggle Fire Mode
+Once Writer is running, click the **🔥 Fire Mode** button in the toolbar. Start typing and watch the chaos unfold.
+
+---
+
+## 🏗️ Architecture
+
+LibrePower lives entirely within the `sw/` (Writer) module of LibreOffice:
+
+```
+sw/
+├── source/uibase/
+│   ├── inc/
+│   │   ├── flameengine.hxx     # Core engine: particles, physics, rendering
+│   │   └── powermode.hxx       # Toggle manager & effect lifecycle
+│   ├── docvw/
+│   │   ├── flameengine.cxx     # Fire, debris, embers, shake, combo logic
+│   │   └── edtwin2.cxx         # Paint hook & global screen shake injection
+│   └── uiview/
+│       └── view0.cxx           # FN_TOGGLE_POWER_MODE command handler
+├── inc/
+│   └── cmdid.h                 # Command ID registration
+├── sdi/
+│   └── swriter.sdi             # Slot definition for the toggle
+└── Library_sw.mk               # Build system integration
+```
+
+---
+
+## 🎬 How It Works
+
+1. **KeyInput** in `edtwin.cxx` detects keystrokes and feeds them to `FlameEngine`
+2. `FlameEngine` manages a real-time particle system with physics simulation (gravity, velocity, decay)
+3. On every **Paint** call in `edtwin2.cxx`, the engine renders flames, debris, embers, and combo text
+4. **Screen shake** is injected by offsetting the `MapMode` origin of the `RenderContext`
+5. **Speed Heat** tracks typing cadence and dynamically scales particle intensity
+
+---
+
+## 📜 License
+
+LibrePower is built on top of [LibreOffice](https://www.libreoffice.org/) and is subject to the [Mozilla Public License, v. 2.0](COPYING.MPL).
+
+---
+
+<p align="center">
+  <i>"Hackers and writers welcome. Let the flames guide your pen."</i> 🔥🦾
+</p>
