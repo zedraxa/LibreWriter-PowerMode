@@ -69,7 +69,6 @@ jobs:
             liblangtag-dev libmspub-dev libmwaw-dev libodfgen-dev liborcus-dev \
             libpagemaker-dev libvisio-dev libwpd-dev libwpg-dev libwps-dev libzmf-dev \
             librevenge-dev libnss3-dev libnspr4-dev \
-            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             libgtk-3-dev libdbus-glib-1-dev libkrb5-dev \
             flex bison gperf ant junit4 nasm zip unzip \
             ccache dpkg-dev fakeroot
@@ -92,6 +91,7 @@ jobs:
             --without-myspell-dicts \
             --without-java \
             --without-doxygen \
+            --disable-gstreamer-1-0 \
             --with-package-format=deb \
             --enable-ccache
 
