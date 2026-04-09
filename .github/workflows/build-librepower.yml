@@ -83,7 +83,10 @@ jobs:
             external/tarballs/fetch.log
 
       - name: Build Writer and Dependencies
-        run: make -j$(nproc) sw
+        run: |
+          make -j$(nproc) build-deps
+          make -j$(nproc) oox
+          make -j$(nproc) sw
 
       - name: Create .deb package
         run: |
